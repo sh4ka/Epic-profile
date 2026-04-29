@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Account Rarity</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0d1117;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #e6edf3;
+            padding: 20px;
+        }
+
+        .container {
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #58a6ff, #bc8cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            color: #8b949e;
+            margin-bottom: 2rem;
+            font-size: 0.9rem;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 2rem;
+        }
+
+        input {
+            flex: 1;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #30363d;
+            background: #161b22;
+            color: #e6edf3;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input:focus {
+            border-color: #58a6ff;
+        }
+
+        button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            background: #238636;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        button:disabled {
+            background: #21262d;
+            color: #484f58;
+            cursor: not-allowed;
+        }
+
+        .result {
+            display: none;
+            padding: 24px;
+            border-radius: 12px;
+            border: 2px solid #30363d;
+            background: #161b22;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 12px;
+        }
+
+        .username {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .user-id {
+            color: #8b949e;
+            font-size: 0.85rem;
+            margin-bottom: 16px;
+        }
+
+        .rarity-label {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .rarity-description {
+            color: #8b949e;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .rarity-bar {
+            margin-top: 16px;
+            height: 6px;
+            border-radius: 3px;
+            background: #21262d;
+            overflow: hidden;
+        }
+
+        .rarity-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        .error {
+            color: #f85149;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .share-btn {
+            margin-top: 16px;
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background: #21262d;
+            color: #e6edf3;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s, border-color 0.2s;
+        }
+
+        .share-btn:hover {
+            background: #30363d;
+            border-color: #8b949e;
+        }
+
+        .share-btn.copied {
+            border-color: #238636;
+            color: #3fb950;
+        }
+
+        .tier-mythic .rarity-label { color: #ff8000; text-shadow: 0 0 10px rgba(255, 128, 0, 0.5); }
+        .tier-mythic .result { border-color: #ff8000; box-shadow: 0 0 20px rgba(255, 128, 0, 0.15); }
+        .tier-mythic .rarity-bar-fill { background: linear-gradient(90deg, #ff8000, #ffd700); }
+
+        .tier-legendary .rarity-label { color: #ff8000; text-shadow: 0 0 8px rgba(255, 128, 0, 0.4); }
+        .tier-legendary .result { border-color: #ff8000; box-shadow: 0 0 15px rgba(255, 128, 0, 0.1); }
+        .tier-legendary .rarity-bar-fill { background: linear-gradient(90deg, #ff8000, #ffaa00); }
+
+        .tier-epic .rarity-label { color: #a335ee; text-shadow: 0 0 8px rgba(163, 53, 238, 0.4); }
+        .tier-epic .result { border-color: #a335ee; box-shadow: 0 0 15px rgba(163, 53, 238, 0.1); }
+        .tier-epic .rarity-bar-fill { background: linear-gradient(90deg, #a335ee, #bc8cff); }
+
+        .tier-rare .rarity-label { color: #0070dd; }
+        .tier-rare .result { border-color: #0070dd; }
+        .tier-rare .rarity-bar-fill { background: linear-gradient(90deg, #0070dd, #58a6ff); }
+
+        .tier-uncommon .rarity-label { color: #1eff00; }
+        .tier-uncommon .result { border-color: #1eff00; }
+        .tier-uncommon .rarity-bar-fill { background: #1eff00; }
+
+        .tier-common .rarity-label { color: #9d9d9d; }
+        .tier-common .result { border-color: #30363d; }
+        .tier-common .rarity-bar-fill { background: #9d9d9d; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GitHub Account Rarity</h1>
+        <p class="subtitle">How rare is your GitHub account? ~180M+ users and counting.</p>
+
+        <div class="search-box">
+            <input type="text" id="username" placeholder="Enter GitHub username" autocomplete="off">
+            <button id="check-btn" onclick="checkRarity()">Check</button>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+            <img class="avatar" id="avatar" src="" alt="avatar">
+            <div class="username" id="display-name"></div>
+            <div class="user-id" id="display-id"></div>
+            <div class="rarity-label" id="rarity-label"></div>
+            <div class="rarity-description" id="rarity-desc"></div>
+            <div class="rarity-bar">
+                <div class="rarity-bar-fill" id="rarity-bar-fill"></div>
+            </div>
+            <button class="share-btn" id="share-btn" onclick="shareResult()">Share Link</button>
+        </div>
+    </div>
+
+    <script>
+        const TOTAL_USERS = 180_000_000;
+
+        function getRarity(id) {
+            const percent = (id / TOTAL_USERS) * 100;
+
+            if (id <= 18_000) {
+                return {
+                    tier: 'mythic',
+                    label: 'Mythic',
+                    description: `Account #${id.toLocaleString()}. Top 0.01% of all GitHub users. A living artifact from 2008 — before GitHub even mattered.`
+                };
+            } else if (id <= 180_000) {
+                return {
+                    tier: 'legendary',
+                    label: 'Legendary',
+                    description: `Account #${id.toLocaleString()}. Top 0.1%. An OG from GitHub's earliest era, when social coding was still an experiment.`
+                };
+            } else if (id <= 1_800_000) {
+                return {
+                    tier: 'epic',
+                    label: 'Epic',
+                    description: `Account #${id.toLocaleString()}. Top 1%. Joined before GitHub hit mainstream — a veteran of the pre-hype era.`
+                };
+            } else if (id <= 9_000_000) {
+                return {
+                    tier: 'rare',
+                    label: 'Rare',
+                    description: `Account #${id.toLocaleString()}. Top 5%. Early enough to remember when GitHub was mostly devs, not resumes.`
+                };
+            } else if (id <= 45_000_000) {
+                return {
+                    tier: 'uncommon',
+                    label: 'Uncommon',
+                    description: `Account #${id.toLocaleString()}. Top 25%. You got in before the masses flooded in. Respectable.`
+                };
+            } else {
+                return {
+                    tier: 'common',
+                    label: 'Common',
+                    description: `Account #${id.toLocaleString()}. Top ${percent.toFixed(1)}% — part of the 75% majority. But hey, you're still shipping code.`
+                };
+            }
+        }
+
+        async function checkRarity() {
+            const input = document.getElementById('username');
+            const username = input.value.trim();
+            if (!username) return;
+
+            const btn = document.getElementById('check-btn');
+            const errorEl = document.getElementById('error');
+            const resultEl = document.getElementById('result');
+
+            btn.disabled = true;
+            btn.textContent = '...';
+            errorEl.style.display = 'none';
+            resultEl.style.display = 'none';
+            resultEl.className = 'result';
+
+            try {
+                const res = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}`);
+                if (!res.ok) {
+                    throw new Error(res.status === 404 ? 'User not found' : `GitHub API error (${res.status})`);
+                }
+
+                const data = await res.json();
+                const rarity = getRarity(data.id);
+
+                document.getElementById('avatar').src = data.avatar_url;
+                document.getElementById('display-name').textContent = data.name || data.login;
+                document.getElementById('display-id').textContent = `ID: ${data.id.toLocaleString()} · Joined: ${new Date(data.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short' })}`;
+                document.getElementById('rarity-label').textContent = rarity.label;
+                document.getElementById('rarity-desc').textContent = rarity.description;
+
+                const barFill = document.getElementById('rarity-bar-fill');
+                const percentage = Math.max(1, 100 - (data.id / TOTAL_USERS) * 100);
+                barFill.style.width = '0%';
+
+                resultEl.style.display = 'block';
+                resultEl.className = `result tier-${rarity.tier}`;
+
+                const newUrl = `${window.location.pathname}?user=${encodeURIComponent(data.login)}`;
+                history.replaceState(null, '', newUrl);
+
+                requestAnimationFrame(() => {
+                    barFill.style.width = percentage + '%';
+                });
+            } catch (err) {
+                errorEl.textContent = err.message;
+                errorEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Check';
+            }
+        }
+
+        document.getElementById('username').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') checkRarity();
+        });
+
+        function shareResult() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) return;
+            const url = `${window.location.origin}${window.location.pathname}?user=${encodeURIComponent(username)}`;
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('share-btn');
+                btn.textContent = 'Copied!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.textContent = 'Share Link';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const user = params.get('user');
+            if (user) {
+                document.getElementById('username').value = user;
+                checkRarity();
+            }
+        });
+    </script>
+</body>
+</html>
